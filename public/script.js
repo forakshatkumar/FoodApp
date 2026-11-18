@@ -43,11 +43,11 @@ const foodItems = [
     },
     {
         id: 6,
-        name: "Chicken Burger",
+        name: "Paneer Burger",
         category: "Burger",
-        price: 180,
-        description: "Juicy chicken patty with fresh lettuce.",
-        image: "https://images.unsplash.com/photo-1553979459-d2229ba7433a?w=500"
+        price: 150,
+        description: "Juicy Paneer patty with fresh lettuce.",
+        image: "https://c.ndtvimg.com/2022-06/gp4k2jro_burgers_625x300_20_June_22.jpg?im=FaceCrop,algorithm=dnn,width=1200,height=886"
     },
     {
         id: 7,
