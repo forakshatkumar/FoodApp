@@ -1,5 +1,3 @@
-
-// Import built-in modules
 import http from "http";
 import fs from "fs";
 import path from "path";
@@ -9,7 +7,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Food Menu
 const foodItems = [
     {
         id: 1,
@@ -43,10 +40,7 @@ const foodItems = [
     }
 ];
 
-// Store orders in an array
 const orders = [];
-
-// Helper function to send JSON response
 function sendJSON(res, statusCode, data) {
     res.writeHead(statusCode, {
         "Content-Type": "application/json"
@@ -55,7 +49,6 @@ function sendJSON(res, statusCode, data) {
     res.end(JSON.stringify(data));
 }
 
-// Helper function to serve files using FS module
 function serveFile(res, fileName, contentType) {
 
     const filePath = path.join(__dirname, "public", fileName);
@@ -83,12 +76,9 @@ function serveFile(res, fileName, contentType) {
 }
 
 
-// Create HTTP Server
 const server = http.createServer((req, res) => {
 
     const url = req.url;
-
-    // Route 1: Welcome Page
     if (url === "/" && req.method === "GET") {
 
         res.writeHead(200, {
@@ -105,14 +95,11 @@ const server = http.createServer((req, res) => {
 
     }
 
-    // Route 2: Display Food Menu
     else if (url === "/menu" && req.method === "GET") {
 
         sendJSON(res, 200, foodItems);
 
     }
-
-    // Route 3: About Application
     else if (url === "/about" && req.method === "GET") {
 
         res.writeHead(200, {
@@ -129,29 +116,21 @@ const server = http.createServer((req, res) => {
         `);
 
     }
-
-    // Route 4: Serve Homepage using FS Module
     else if (url === "/home" && req.method === "GET") {
 
         serveFile(res, "index.html", "text/html");
 
     }
-
-    // Serve CSS file
     else if (url === "/style.css" && req.method === "GET") {
 
         serveFile(res, "style.css", "text/css");
 
     }
-
-    // Serve JavaScript file
     else if (url === "/script.js" && req.method === "GET") {
 
         serveFile(res, "script.js", "text/javascript");
 
     }
-
-    // Route 5: Place Order
     else if (url === "/place-order" && req.method === "POST") {
 
         let body = "";
@@ -167,8 +146,6 @@ const server = http.createServer((req, res) => {
                 const order = JSON.parse(body);
 
                 const { orderId, customerName, itemName, quantity } = order;
-
-                // Validate required fields
                 if (
                     orderId === undefined ||
                     typeof customerName !== "string" ||
@@ -186,7 +163,6 @@ const server = http.createServer((req, res) => {
                     return;
                 }
 
-                // Add order to array
                 orders.push({
                     orderId,
                     customerName: customerName.trim(),
@@ -211,7 +187,6 @@ const server = http.createServer((req, res) => {
 
     }
 
-    // Handle invalid routes
     else {
 
         sendJSON(res, 404, {
@@ -223,7 +198,6 @@ const server = http.createServer((req, res) => {
 });
 
 
-// Start Server on Port 3000
 server.listen(3000, () => {
 
     console.log("HTTP Server running at http://localhost:3000");
