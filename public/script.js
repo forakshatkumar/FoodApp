@@ -101,7 +101,7 @@ function displayFoodItems(items) {
     }
 
     foodContainer.innerHTML = items.map(item => `
-        <div class="food-card">
+        <div class="food-card reveal">
 
             <img src="${item.image}" alt="${item.name}">
 
@@ -310,20 +310,126 @@ categoryButtons.forEach(button => {
 });
 
 
-// Checkout (Backend integration will be added later)
-checkoutButton.addEventListener("click", () => {
-
+// Checkout: send each cart item to the Express API
+async function checkout() {
     if (cart.length === 0) {
-        alert("Your cart is empty!");
+        showToast("Your cart is empty. Add something delicious first.", "error");
         return;
     }
 
-    alert("Your cart is ready! Order placement will be connected to the Express API in a later step.");
+    const customerName = prompt("Enter your name to place the order:");
+    if (!customerName || !customerName.trim()) {
+        showToast("Please enter your name to continue.", "error");
+        return;
+    }
 
+    const originalButtonText = checkoutButton.textContent;
+    checkoutButton.disabled = true;
+    checkoutButton.textContent = "Placing order...";
+
+    try {
+        const placedOrders = [];
+
+        for (const item of cart) {
+            const order = {
+                orderId: Date.now() + Math.floor(Math.random() * 100000),
+                customerName: customerName.trim(),
+                itemName: item.name,
+                quantity: item.quantity,
+                status: "Pending",
+                totalAmount: item.price * item.quantity
+            };
+
+            const response = await fetch("http://localhost:4000/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(order)
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(result.message || `Order request failed (${response.status}).`);
+            }
+
+            placedOrders.push(result.order || order);
+        }
+
+        const orderTotal = placedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+        cart = [];
+        updateCart();
+        cartOverlay.classList.remove("show");
+        showToast(`Order placed successfully! Total: ₹${orderTotal}`, "success");
+    } catch (error) {
+        console.error("Checkout error:", error);
+        showToast(
+            error.message.includes("Failed to fetch")
+                ? "Cannot reach the order server. Make sure expressApp.js is running on port 4000."
+                : error.message,
+            "error"
+        );
+    } finally {
+        checkoutButton.disabled = false;
+        checkoutButton.textContent = originalButtonText;
+    }
+}
+
+// Lightweight in-page feedback instead of browser alerts
+function showToast(message, type = "success") {
+    let toast = document.getElementById("craveToast");
+
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "craveToast";
+        toast.className = "crave-toast";
+        toast.setAttribute("role", "status");
+        toast.setAttribute("aria-live", "polite");
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.className = `crave-toast ${type} visible`;
+
+    clearTimeout(showToast.timeout);
+    showToast.timeout = setTimeout(() => {
+        toast.classList.remove("visible");
+    }, 3600);
+}
+
+checkoutButton.addEventListener("click", checkout);
+
+// Close cart with Escape
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") cartOverlay.classList.remove("show");
 });
 
+// Reveal sections and cards smoothly as they enter the viewport
+const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.12 });
+
+function observeRevealElements() {
+    document.querySelectorAll(".reveal:not(.revealed)").forEach(element => {
+        revealObserver.observe(element);
+    });
+}
+
+// Observe static sections and newly rendered menu cards
+document.querySelectorAll(".hero-content, .hero-image, .categories, .menu-section, .about")
+    .forEach(element => element.classList.add("reveal"));
+
+observeRevealElements();
+
+const menuObserver = new MutationObserver(observeRevealElements);
+menuObserver.observe(foodContainer, { childList: true });
 
 // Initial Display
 displayFoodItems(foodItems);
 
 updateCart();
+document.getElementById("checkoutButton").addEventListener("click", checkout);
