@@ -80,19 +80,7 @@ const server = http.createServer((req, res) => {
 
     const url = req.url;
     if (url === "/" && req.method === "GET") {
-
-        res.writeHead(200, {
-            "Content-Type": "text/html"
-        });
-
-        res.end(`
-            <h1>Welcome to Crave!</h1>
-            <p>Your favourite food, delivered fresh.</p>
-            <a href="/home">Visit Our Website</a>
-            <br>
-            <a href="/menu">View Food Menu</a>
-        `);
-
+        serveFile(res, "landingPage.html", "text/html");
     }
 
     else if (url === "/menu" && req.method === "GET") {
